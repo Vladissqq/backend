@@ -1,0 +1,5 @@
+# Lines starting with '#' are considered comments.
+# Ignore any file named foo.txt.
+back/node_modules
+# Ignore (generated) html files,
+http/node_modules
