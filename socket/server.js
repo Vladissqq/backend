@@ -1,7 +1,10 @@
 const net = require('net');
 const arrClients = [];
 const server = net.createServer((c) => {
-  arrClients.push(c);
+  arrClients.push({
+    port: c.remotePort,
+    c: c
+  });
   // 'connection' listener
   console.log('client connected');
   c.on('end', () => {
@@ -9,10 +12,21 @@ const server = net.createServer((c) => {
   });
 
   c.on('data', (data) => {
-    console.log(data.toString());
-    arrClients.forEach((client) => {
-      client.write(data.toString());
-    })
+    
+    console.log(data.toString().trim());
+    if(data.toString().trim() == 'l'){
+      const arrPorts = [];
+      arrClients.forEach((client) => {
+        arrPorts.push(client.port);
+        
+      });
+      c.write(arrPorts.join(';'));
+    }
+    // else {
+    //   arrClients.forEach((client) => {
+    //     client.c.write( ` client:${c.remotePort}   :${data.toString()}`);
+    //   })
+    // }
   });
 });
 
