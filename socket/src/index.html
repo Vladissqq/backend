@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="google-signin-client_id"
+        content="150648978370-nch0rn85d674vlg4tn2cv09ohd1mktie.apps.googleusercontent.com">
+    <title>Document</title>
+</head>
+
+<body>
+    <a href='' onClick="javascript:loginWithFacebook()"">Login with facebook</a>
+    <div id=" fb-root"></div>
+
+        <div class="fb-login-button" data-width="" data-size="large" data-button-type="continue_with"
+            data-auto-logout-link="false" data-use-continue-as="false"></div>
+        <div class="g-signin2" data-onsuccess="onSignIn">
+            <p>Profile details</p>
+            <p>email adress</p>
+            <p id="email" class="alert alert-danger"></p>
+            <button onclick="signOut()" >signOut</button>
+        </div>
+        <script>
+            window.fbAsyncInit = function () {
+                FB.init({
+                    appId: '2063068383801503',
+                    cookie: true,
+                    xfbml: true,
+                    version: 'v3.3'
+                });
+
+                FB.AppEvents.logPageView();
+                FB.logout();
+                fbSDKLoaded();
+            };
+
+            (function (d, s, id) {
+                var js, fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) { return; }
+                js = d.createElement(s); js.id = id;
+                js.src = "https://connect.facebook.net/en_US/sdk.js";
+                fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        </script>
+        <script src="https://apis.google.com/js/platform.js" async defer></script>
+        <script src="auth.js"></script>
+</body>
+
+</html>
