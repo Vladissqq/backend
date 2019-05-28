@@ -1,4 +1,5 @@
 import React from 'react';
+import { Input } from 'antd';
 
 export default class ChatInput extends React.Component  {
     state = {
@@ -14,8 +15,8 @@ export default class ChatInput extends React.Component  {
                 this.setState({message: e.target.elements.inputMessage.value})
                 this.props.onSubmitMessage(this.state);
             }}>
-                <input name = 'inputMessage'></input>
-                <button>Send</button>
+                <Input name = 'inputMessage'></Input>
+                <input type="submit" value={'Send'} />
             </form>
         )
     }

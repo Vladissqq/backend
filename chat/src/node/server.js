@@ -1,5 +1,5 @@
 const Websocket = require('ws');
-
+const arrPorts = [];
 const arrClients = [];
 const arraysPrivate = {
   count: 0
@@ -10,55 +10,83 @@ const rPort = /^(.p\d{5})$/gm;
 const rJoin = /^(.p\d{6})$/gm;
 const rQuit = /^.r/g;
 
+const rand = function rand(min, max) {
+  let rand = (max - min) * Math.random() + min;
+  rand = Math.round(rand);
+  return rand;
+};
+
+
 const server = new Websocket.Server({
   port: 8124
-  });
+});
 
 server.on('connection', (c) => {
-  arrClients.push({
-    port: c.remotePort,
+  const obj = {
+    port: null,
     c: c,
     private: null
-  });
+  };
+  const cPort = rand(1000, 9999);
+  obj.port = cPort;
+  arrClients.push(obj)
+  arrPorts.push(cPort);
+  const objList = {
+    message: null,
+    list: arrPorts
+  }
+  console.log(arrClients.length);
+  console.log(arrPorts);
+  c.send(JSON.stringify(objList));
+
+  const finderC = function finderC(obj) {
+    return obj.port === cPort;
+  };
   // 'connection' listener
 
+  // console.log(arrClients);
+
   c.onclose = () => {
+    const index = arrClients.findIndex(finderC);
+    arrClients.splice(index,1);
+    arrPorts.splice(index,1);
     console.log('client disconnected');
   };
 
   c.onmessage = (e) => {
-    server.clients.forEach(
-      (c) =>{
-        c.send(e.data)
-      }
-    )
-    // const data = e.data;
-    // console.log(data);
-    // const cPort = c.remotePort;
-    // let dat = data.toString().trim();
-    // let i = arraysPrivate.count;
+    const dataJSON = e.data;
+    const data = JSON.parse(e.data);
+    const dat = data.message.toString().trim();
 
-    // const finder = function finder(c) {
-    //   return c.port.toString() === dat.toString().substring(2).trim();
-    // };
-    // const finderC = function finderC(c) {
-    //   return c.port === cPort;
-    // };
-    // const returnRoom = function finderRoom(i) {
-    //   return dat.toString().substring(2).trim();
-    // };
-
-    // const returnStatus = function returnStatus(c) {
-    //   return c.private === null;
-    // };
-
-    // const notThisUser = function notThisUser(c) {
-    //   return c.port !== cPort;
-    // }
+    
+    const objMessage = {
+      message: null,
+      list: null
+    };
+    objMessage.message = dat;
+    console.log(objMessage);
 
 
+    let i = arraysPrivate.count;
 
-    // console.log(c.remotePort);
+    const finder = function finder(obj) {
+      return obj.port.toString() === dat.toString().substring(2).trim();
+    };
+
+    const returnRoom = function finderRoom(i) {
+      return dat.toString().substring(2).trim();
+    };
+
+    const returnStatus = function returnStatus(obj) {
+      return obj.private === null;
+    };
+
+    const notThisUser = function notThisUser(obj) {
+      return obj.port !== cPort;
+    }
+
+
+
     // if (rQuit.test(dat)) {
     //   const indexUser = arrClients.findIndex(finderC);
     //   console.log('indexUse_' + indexUser);
@@ -75,14 +103,14 @@ server.on('connection', (c) => {
 
     // }
 
-    // if (rPort.test(dat)) {
-    //   const guest = arrClients.find(finder);
-    //   const inviter = arrClients.find(finderC);
-    //   const indInviter = arrClients.findIndex(finderC);
-    //   arrClients[indInviter].private = `${c.remotePort}${i}`;
-    //   arraysPrivate[`${c.remotePort}${i}`] = [inviter];
-    //   guest.c.send(`You was invite in private chat. command for join: /p${c.remotePort}${i}`);
-    // };
+    // // if (rPort.test(dat)) {
+    // //   const guest = arrClients.find(finder);
+    // //   const inviter = arrClients.find(finderC);
+    // //   const indInviter = arrClients.findIndex(finderC);
+    // //   arrClients[indInviter].private = `${c.remotePort}${i}`;
+    // //   arraysPrivate[`${c.remotePort}${i}`] = [inviter];
+    // //   guest.c.send(`You was invite in private chat. command for join: /p${c.remotePort}${i}`);
+    // // };
 
     // if (rJoin.test(dat)) {
     //   const guest = arrClients.find(finderC);
@@ -92,34 +120,30 @@ server.on('connection', (c) => {
     //   arraysPrivate[returnRoom()].push(guest);
     // };
 
-    // if (rList.test(data.toString().trim())) {
-    //   const arrPorts = [];
-    //   arrClients.forEach((client) => {
-    //     arrPorts.push(client.port);
-    //   })
-    //   c.write(arrPorts.join('; '))
-    // };
 
 
-    // if (dat[0] !== '/') {
-    //   const indUser = arrClients.findIndex(finderC);
-    //   if (arrClients[indUser].private === null) {
-    //     const f = arrClients.filter(returnStatus);
-    //     const filtr = f.filter(notThisUser);
-    //     filtr.forEach((c) => {
-    //       c.c.send(`user--${cPort}: ${dat}`);
-    //     });
-    //   }
-    //   else {
-    //     const indUser = arrClients.findIndex(finderC);
-    //     const idOfRoom = arrClients[indUser].private.toString();
-    //     const room = arraysPrivate[idOfRoom];
-    //     const filter = room.filter(notThisUser);
-    //     filter.forEach(c => c.c.send(`private-user-${cPort}: ${dat}`));
-    //   }
-    // };
+
+    if (dat[0] !== '/') {
+      const indUser = arrClients.findIndex(finderC);
+
+      if (arrClients[indUser].private === null) {
+        const f = arrClients.filter(returnStatus);
+        const filtr = f.filter(notThisUser);
+        
+        filtr.forEach((obj) => {
+          obj.c.send(JSON.stringify(objMessage));
+        });
+      }
+      else {
+        const indUser = arrClients.findIndex(finderC);
+        const idOfRoom = arrClients[indUser].private.toString();
+        const room = arraysPrivate[idOfRoom];
+        const filter = room.filter(notThisUser);
+        filter.forEach(c => c.c.send(`private-user-${cPort}: ${data}`));
+      }
+    };
     // arraysPrivate[i] = arrClients[0];
-    // arraysPrivate.count ++;
+    arraysPrivate.count++;
     // console.log(arraysPrivate)
   };
 });

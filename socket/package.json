@@ -11,5 +11,13 @@
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^1.19.0"
+  },
+  "dependencies": {
+    "express": "^4.17.0",
+    "googleapis": "^40.0.0",
+    "passport-google-token": "^0.1.2",
+    "path": "^0.12.7",
+    "websocket": "^1.0.28",
+    "ws": "^7.0.0"
   }
 }
