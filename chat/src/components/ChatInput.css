@@ -1,0 +1,7 @@
+.form-input{
+    display: flex
+}
+.input-message {
+    margin: auto;
+    width: 80%;
+}

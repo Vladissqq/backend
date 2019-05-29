@@ -1,0 +1,10 @@
+html, body {
+    height: 100%;
+  }
+
+.App{
+    margin: auto;
+    width: 95%;
+    border: 3px solid rgba(187, 187, 187, 0.712);
+    height:90vh;
+}

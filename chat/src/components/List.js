@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default ({ port }) =>
-  <div>
-      <div>{port}</div>
-  </div>
+export default ({ name,port }) =>
+  <p>
+    <strong>{name}</strong> <em>{port}</em>
+  </p>
