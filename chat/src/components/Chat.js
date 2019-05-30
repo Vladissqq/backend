@@ -2,15 +2,11 @@ import React from 'react';
 import ChatInput from './ChatInput';
 import Messager from './Messager';
 import ClientList from './List';
-import './Chat.css';
-import { Layout } from 'antd';
-import { Icon } from 'antd';
-const { Header, Footer, Sider, Content } = Layout;
+import './Chat.css'
 
 
 const URL = 'ws://localhost:8124';
-
-export default class Chat extends React.Component {
+class Chat extends React.Component {
     state = {
         name: '',
         messages: [],
@@ -30,13 +26,13 @@ export default class Chat extends React.Component {
             const data = JSON.parse(e.data);
             const message = { message: data.message };
             const list = [];
-            data.list.forEach(el => {
-                list.push({port: el});
-            });
+            
             // const list = {port: data.list};
 
             if (data.list !== null) {
-
+                data.list.forEach(el => {
+                    list.push({ port: el });
+                });
                 this.renderList(list);
             }
             if (message !== null) {
@@ -44,7 +40,7 @@ export default class Chat extends React.Component {
             };
             console.log(this.state.list);
             console.log(this.state.messages)
-            
+
         };
         this.ws.onclose = () => {
             console.log('disconnected')
@@ -52,7 +48,7 @@ export default class Chat extends React.Component {
             this.setState({
                 ws: new WebSocket(URL),
             })
-            
+
         };
     }
     renderList(cli) {
@@ -61,7 +57,7 @@ export default class Chat extends React.Component {
                 list: cli
             }
         ))
-        
+
     }
     addMessage = message =>
         this.setState(state => ({ messages: [message, ...state.messages] }));
@@ -75,43 +71,29 @@ export default class Chat extends React.Component {
     render() {
         return (
             <div className='chat'>
-                <Layout>
-                    <Header>
-                        <Icon type="meh" />
-                        NAVIGATION
-                        <Icon type="meh" />
-                    </Header>
-                    <Layout>
-                        <Sider>
-                            <div className='sider'>
-                                {this.state.list.map((list, index) =>
-                                    <ClientList
-                                        key={index}
-                                        port={list.port}
-                                    />
-                                )}
-                            </div>
-                        </Sider>
-                        <Content>
-                            <div className='message-container' >
-                                {this.state.messages.map((message, index) =>
-                                    <Messager
-                                        key={index}
-                                        message={message.message}
 
-                                    />,
-                                )}
-                            </div>
-                        </Content>
-                    </Layout>
-                    <Footer>
-                        <ChatInput
-                            onSubmitMessage={(value) => {
-                                this.submitMessage(value)
-                            }}
+                <div className='sider'>
+                    {this.state.list.map((list, index) =>
+                        <ClientList
+                            key={index}
+                            port={list.port}
                         />
-                    </Footer>
-                </Layout>
+                    )}
+                </div>
+                <div className='message-container' >
+                    {this.state.messages.map((message, index) =>
+                        <Messager
+                            key={index}
+                            message={message.message}
+
+                        />,
+                    )}
+                </div>
+                <ChatInput
+                    onSubmitMessage={(value) => {
+                        this.submitMessage(value)
+                    }}
+                />
             </div>
 
             // <div className='chat'>
@@ -130,4 +112,6 @@ export default class Chat extends React.Component {
             // </div>
         )
     }
-}
+};
+
+export {Chat};

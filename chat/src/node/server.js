@@ -27,7 +27,8 @@ server.on('connection', (c) => {
     c: c,
     private: null
   };
-  const cPort = rand(1000, 9999);
+
+  const cPort = rand(10000, 99999);
   obj.port = cPort;
   arrClients.push(obj)
   arrPorts.push(cPort);
@@ -37,7 +38,7 @@ server.on('connection', (c) => {
   }
   console.log(arrClients.length);
   console.log(arrPorts);
-  c.send(JSON.stringify(objList));
+  server.clients.forEach(c=> c.send(JSON.stringify(objList)));
 
   const finderC = function finderC(obj) {
     return obj.port === cPort;
@@ -102,15 +103,19 @@ server.on('connection', (c) => {
     //   }
 
     // }
-
-    // // if (rPort.test(dat)) {
-    // //   const guest = arrClients.find(finder);
-    // //   const inviter = arrClients.find(finderC);
-    // //   const indInviter = arrClients.findIndex(finderC);
-    // //   arrClients[indInviter].private = `${c.remotePort}${i}`;
-    // //   arraysPrivate[`${c.remotePort}${i}`] = [inviter];
-    // //   guest.c.send(`You was invite in private chat. command for join: /p${c.remotePort}${i}`);
-    // // };
+    console.log(rPort.test(dat));
+    if (rPort.test(dat)) {
+      console.log('hi');
+      const guest = arrClients.find(finder);
+      const inviter = arrClients.find(finderC);
+      const indInviter = arrClients.findIndex(finderC);
+      arrClients[indInviter].private = `${arrClients[indInviter].private}${i}`;
+      arraysPrivate[`${arrClients[indInviter].private}${i}`] = [inviter];
+      
+      objMessage.message = `You was invite in private chat. command for join: /p${arrClients[indInviter].private}${i}`;
+      console.log(guest);
+      guest.c.send(JSON.stringify(objMessage));
+    };
 
     // if (rJoin.test(dat)) {
     //   const guest = arrClients.find(finderC);

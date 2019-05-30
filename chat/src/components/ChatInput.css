@@ -1,7 +1,11 @@
 .form-input{
-    display: flex
+    position: fixed;
+    bottom: 0;
+    width: 100%;
 }
-.input-message {
-    margin: auto;
-    width: 80%;
+.input-btn{
+    color: #fff;
+background-color: #007bff;
+border-color: #007bff;
 }
+
