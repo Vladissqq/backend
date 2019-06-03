@@ -13,7 +13,6 @@ export default class ChatInput extends React.Component {
             <form className='form-input' onSubmit={(e) => {
                 e.preventDefault();
                 this.setState({ message: e.target.elements.inputMessage.value });
-                console.log(this.state.message)
                 this.props.onSubmitMessage({ message: e.target.elements.inputMessage.value });
             }}>
                 <div className="input-group mb-3">

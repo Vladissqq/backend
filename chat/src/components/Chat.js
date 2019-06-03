@@ -4,17 +4,13 @@ import Messager from './Messager';
 import ClientList from './List';
 import './Chat.css';
 import openSocket from 'socket.io-client';
+import {connect} from 'react-redux';
+import {write} from './store/actions/ations';
 
 
 const URL = 'ws://localhost:8124';
 class Chat extends React.Component {
-    state = {
-        name: '',
-        messages: [],
-        list: []
-    };
-
-
+    
 
     componentDidMount() {
         this.ws = openSocket(URL);
@@ -26,51 +22,34 @@ class Chat extends React.Component {
             this.addMessage(message);
         })
 
-    
-
-
         };
-    //     this.ws.onclose = () => {
-    //         console.log('disconnected')
-    //         // automatically try to reconnect on connection loss
-    //         this.setState({
-    //             ws: new WebSocket(URL),
-    //         })
-
-    //     };
-    // }
-    // renderList(cli) {
-    //     this.setState(state => (
-    //         {
-    //             list: cli
-    //         }
-    //     ))
-
-    // }
-    addMessage = message =>
-        this.setState(state => ({ messages: [message, ...state.messages] }));
+        addMessage = (message) => {
+            this.props.addMesageToStore(message);
+            
+        };
 
     submitMessage = (value) => {
         const message = value;
         this.ws.emit('output message',message);
         this.addMessage(message);
-        console.log(message);
+        // console.log(message);
     }
 
     render() {
+        
         return (
             <div className='chat'>
 
-                <div className='sider'>
+                {/* <div className='sider'>
                     {this.state.list.map((list, index) =>
                         <ClientList
                             key={index}
                             port={list.port}
                         />
                     )}
-                </div>
+                </div> */}
                 <div className='message-container' >
-                    {this.state.messages.map((message, index) =>
+                    {this.props.message.messages.map((message, index) =>
                         <Messager
                             key={index}
                             message={message.message}
@@ -103,4 +82,16 @@ class Chat extends React.Component {
     }
 };
 
-export {Chat};
+
+function mapDispatchToProps(dispatch){
+    return{
+        addMesageToStore: (message)=> dispatch(write(message))
+    }
+}
+function mapStateToProps(state){
+    return{
+        message: state.message
+    }
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(Chat);
