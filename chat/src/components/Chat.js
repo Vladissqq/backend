@@ -2,7 +2,8 @@ import React from 'react';
 import ChatInput from './ChatInput';
 import Messager from './Messager';
 import ClientList from './List';
-import './Chat.css'
+import './Chat.css';
+import openSocket from 'socket.io-client';
 
 
 const URL = 'ws://localhost:8124';
@@ -16,56 +17,44 @@ class Chat extends React.Component {
 
 
     componentDidMount() {
-        this.ws = new WebSocket(URL);
-        this.ws.onopen = () => {
-            // on connecting, do nothing but log it to the console
+        this.ws = openSocket(URL);
+        this.ws.on('connect',()=> {
             console.log('connected');
-        };
+        });
 
-        this.ws.onmessage = e => {
-            const data = JSON.parse(e.data);
-            const message = { message: data.message };
-            const list = [];
-            
-            // const list = {port: data.list};
+        this.ws.on('input message',(message) => {
+            this.addMessage(message);
+        })
 
-            if (data.list !== null) {
-                data.list.forEach(el => {
-                    list.push({ port: el });
-                });
-                this.renderList(list);
-            }
-            if (message !== null) {
-                this.addMessage(message);
-            };
-            console.log(this.state.list);
-            console.log(this.state.messages)
+    
+
 
         };
-        this.ws.onclose = () => {
-            console.log('disconnected')
-            // automatically try to reconnect on connection loss
-            this.setState({
-                ws: new WebSocket(URL),
-            })
+    //     this.ws.onclose = () => {
+    //         console.log('disconnected')
+    //         // automatically try to reconnect on connection loss
+    //         this.setState({
+    //             ws: new WebSocket(URL),
+    //         })
 
-        };
-    }
-    renderList(cli) {
-        this.setState(state => (
-            {
-                list: cli
-            }
-        ))
+    //     };
+    // }
+    // renderList(cli) {
+    //     this.setState(state => (
+    //         {
+    //             list: cli
+    //         }
+    //     ))
 
-    }
+    // }
     addMessage = message =>
         this.setState(state => ({ messages: [message, ...state.messages] }));
 
     submitMessage = (value) => {
         const message = value;
-        this.ws.send(JSON.stringify(message));
+        this.ws.emit('output message',message);
         this.addMessage(message);
+        console.log(message);
     }
 
     render() {
