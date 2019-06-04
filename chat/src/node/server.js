@@ -1,7 +1,7 @@
 // const Websocket = require('ws');
 const io = require('socket.io')();
 
-const arrPorts = [];
+const arrId = [];
 const arrClients = [];
 const arraysPrivate = {
   count: 0
@@ -19,11 +19,25 @@ const rand = function rand(min, max) {
 };
 
 io.on('connection', (client) => {
+  arrId.push(client.id);
+  client.emit('send online',arrId);
   console.log('client connected');
+  console.log(arrId.length);
+
+  client.on('disconnect',() =>{
+    console.log('client disconnect');
+    const index = arrId.findIndex((id) =>{
+      return id === client.id;
+    });
+    arrId.splice(index,1);
+    client.emit('send online',arrId);
+  });
+
   client.on('output message',(message) => {
     client.broadcast.emit('input message',message);
   });
 });
+
 
 const port = 8124;
 io.listen(port);

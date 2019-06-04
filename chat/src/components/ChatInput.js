@@ -10,10 +10,11 @@ export default class ChatInput extends React.Component {
 
     render() {
         return (
-            <form className='form-input' onSubmit={(e) => {
+            <form className='form-input'  name = 'test'onSubmit={(e) => {
                 e.preventDefault();
                 this.setState({ message: e.target.elements.inputMessage.value });
                 this.props.onSubmitMessage({ message: e.target.elements.inputMessage.value });
+                console.log(test)
             }}>
                 <div className="input-group mb-3">
                     <input name='inputMessage' className='input-message form-control'></input>

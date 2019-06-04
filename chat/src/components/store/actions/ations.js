@@ -3,4 +3,11 @@ export function write(message) {
         type: 'MESSAGE',
         payload: message
     }
-}
+};
+
+export function idOnline (arr) {
+    return {
+        type: 'ONLINE',
+        payload: arr
+    }
+};

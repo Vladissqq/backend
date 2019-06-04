@@ -2,10 +2,12 @@ import React from 'react';
 import ChatInput from './ChatInput';
 import Messager from './Messager';
 import ClientList from './List';
+import PrivateRoom from './PrivateRoom'
 import './Chat.css';
 import openSocket from 'socket.io-client';
 import {connect} from 'react-redux';
 import {write} from './store/actions/ations';
+import {idOnline} from './store/actions/ations';
 
 
 const URL = 'ws://localhost:8124';
@@ -20,9 +22,19 @@ class Chat extends React.Component {
 
         this.ws.on('input message',(message) => {
             this.addMessage(message);
+        });
+
+        this.ws.on('send online',(arr)=>{
+            this.renderId(arr);
+            console.log(arr);
         })
 
         };
+
+        renderId = (arr) => {
+            this.props.pushIdToStore(arr)
+        };
+
         addMessage = (message) => {
             this.props.addMesageToStore(message);
             
@@ -36,18 +48,18 @@ class Chat extends React.Component {
     }
 
     render() {
-        
+        console.log(this.props);
         return (
             <div className='chat'>
-
-                {/* <div className='sider'>
-                    {this.state.list.map((list, index) =>
+                <div className='sider'>
+                <PrivateRoom/>
+                    {this.props.ids.ids.map((id, index) =>
                         <ClientList
                             key={index}
-                            port={list.port}
+                            port={id}
                         />
                     )}
-                </div> */}
+                </div>
                 <div className='message-container' >
                     {this.props.message.messages.map((message, index) =>
                         <Messager
@@ -85,12 +97,14 @@ class Chat extends React.Component {
 
 function mapDispatchToProps(dispatch){
     return{
-        addMesageToStore: (message)=> dispatch(write(message))
+        addMesageToStore: (message)=> dispatch(write(message)),
+        pushIdToStore: (arr)=> dispatch(idOnline(arr))
     }
 }
 function mapStateToProps(state){
     return{
-        message: state.message
+        message: state.message,
+        ids: state.id
     }
 }
 
