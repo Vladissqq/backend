@@ -5,46 +5,55 @@ import ClientList from './List';
 import PrivateRoom from './PrivateRoom'
 import './Chat.css';
 import openSocket from 'socket.io-client';
-import {connect} from 'react-redux';
-import {write} from './store/actions/ations';
-import {idOnline} from './store/actions/ations';
+import { connect } from 'react-redux';
+import { write } from './store/actions/ations';
+import { idOnline } from './store/actions/ations';
+import { room } from './store/actions/ations';
 
 
 const URL = 'ws://localhost:8124';
 class Chat extends React.Component {
-    
+
 
     componentDidMount() {
         this.ws = openSocket(URL);
-        this.ws.on('connect',()=> {
+        this.ws.on('connect', () => {
             console.log('connected');
         });
 
-        this.ws.on('input message',(message) => {
+        this.ws.on('input message', (message) => {
             this.addMessage(message);
         });
 
-        this.ws.on('send online',(arr)=>{
+        this.ws.on('send online', (arr) => {
             this.renderId(arr);
             console.log(arr);
         })
 
-        };
+    };
 
-        renderId = (arr) => {
-            this.props.pushIdToStore(arr)
-        };
+    renderId = (arr) => {
+        this.props.pushIdToStore(arr)
+    };
 
-        addMessage = (message) => {
-            this.props.addMesageToStore(message);
-            
-        };
+    addMessage = (message) => {
+        this.props.addMesageToStore(message);
+
+    };
+
+    addRoom = (obj) => {
+        this.props.addRoomToStore(obj);
+    };
 
     submitMessage = (value) => {
         const message = value;
-        this.ws.emit('output message',message);
+        this.ws.emit('output message', message);
         this.addMessage(message);
-        // console.log(message);
+    };
+    submitRoom = (value) => {
+        const room = value;
+        this.addRoom(room);
+        this.ws.emit('create',room);
     }
 
     render() {
@@ -52,7 +61,11 @@ class Chat extends React.Component {
         return (
             <div className='chat'>
                 <div className='sider'>
-                <PrivateRoom/>
+                    <PrivateRoom
+                        onSubmitRoom={(value) => {
+                            this.submitRoom(value)
+                        }}
+                    />
                     {this.props.ids.ids.map((id, index) =>
                         <ClientList
                             key={index}
@@ -95,17 +108,19 @@ class Chat extends React.Component {
 };
 
 
-function mapDispatchToProps(dispatch){
-    return{
-        addMesageToStore: (message)=> dispatch(write(message)),
-        pushIdToStore: (arr)=> dispatch(idOnline(arr))
+function mapDispatchToProps(dispatch) {
+    return {
+        addMesageToStore: (message) => dispatch(write(message)),
+        pushIdToStore: (arr) => dispatch(idOnline(arr)),
+        addRoomToStore: (obj) => dispatch(room(obj))
     }
 }
-function mapStateToProps(state){
-    return{
+function mapStateToProps(state) {
+    return {
         message: state.message,
-        ids: state.id
+        ids: state.id,
+        rooms: state.room
     }
 }
 
-export default connect(mapStateToProps,mapDispatchToProps)(Chat);
+export default connect(mapStateToProps, mapDispatchToProps)(Chat);

@@ -1,6 +1,7 @@
 // const Websocket = require('ws');
 const io = require('socket.io')();
 
+
 const arrId = [];
 const arrClients = [];
 const arraysPrivate = {
@@ -36,6 +37,10 @@ io.on('connection', (client) => {
   client.on('output message',(message) => {
     client.broadcast.emit('input message',message);
   });
+  client.on('create',(roomObj)=>{
+    console.log(roomObj);
+    client.join(roomObj.room);
+  })
 });
 
 

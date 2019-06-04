@@ -11,3 +11,10 @@ export function idOnline (arr) {
         payload: arr
     }
 };
+
+export function room (formData) {
+    return{
+        type: 'ROOM',
+        payload: formData
+    }
+}

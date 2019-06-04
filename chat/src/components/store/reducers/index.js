@@ -1,10 +1,12 @@
 import {createStore, combineReducers} from 'redux';
 import {messageReducer} from './messageReducer';
 import {idReducer} from './idReducer';
+import {roomReducer} from './roomReducer';
 
 const reducer = combineReducers({
     message: messageReducer,
-    id: idReducer
+    id: idReducer,
+    room: roomReducer
 });
 
 
