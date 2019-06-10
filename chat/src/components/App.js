@@ -12,6 +12,7 @@ class App extends Component {
     return (
       <div>
         <Provider store={store}>
+        <Navbar />
           <Chat />
         </Provider>
       </div>

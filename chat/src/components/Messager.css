@@ -1,4 +1,7 @@
 .message{
-    background-color: #4aacb8;
+    margin: 10px;
+    padding: 10px;
+    background-color: #80deea;
     border-radius: 15px;
+    width: 30%;
 }

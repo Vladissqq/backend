@@ -13,17 +13,13 @@ const rPort = /^(.p\d{5})$/gm;
 const rJoin = /^(.p\d{6})$/gm;
 const rQuit = /^.r/g;
 
-const rand = function rand(min, max) {
-  let rand = (max - min) * Math.random() + min;
-  rand = Math.round(rand);
-  return rand;
-};
 
 io.on('connection', (client) => {
   arrId.push(client.id);
   client.emit('send online',arrId);
   console.log('client connected');
   console.log(arrId.length);
+  
 
   client.on('disconnect',() =>{
     console.log('client disconnect');
@@ -36,10 +32,18 @@ io.on('connection', (client) => {
 
   client.on('output message',(message) => {
     client.broadcast.emit('input message',message);
+    // console.log(client.rooms);
   });
   client.on('create',(roomObj)=>{
-    console.log(roomObj);
     client.join(roomObj.room);
+    console.log(roomObj.room);
+  });
+  client.on('room message',(message) => {
+    client.broadcast.to(message.room).emit('input room',message);
+  });
+  client.on('leave room',(room) =>{
+    client.leave(room);
+    client.emit('server message','you left the room');
   })
 });
 

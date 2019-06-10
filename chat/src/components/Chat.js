@@ -1,6 +1,7 @@
 import React from 'react';
 import ChatInput from './ChatInput';
 import Messager from './Messager';
+import LeaveBtn from './LeaveRoom';
 import ClientList from './List';
 import PrivateRoom from './PrivateRoom'
 import './Chat.css';
@@ -13,7 +14,9 @@ import { room } from './store/actions/ations';
 
 const URL = 'ws://localhost:8124';
 class Chat extends React.Component {
-
+    state = {
+        room: null,
+    }
 
     componentDidMount() {
         this.ws = openSocket(URL);
@@ -25,9 +28,17 @@ class Chat extends React.Component {
             this.addMessage(message);
         });
 
+        this.ws.on('input room',(message) => {
+            this.addMessage(message);
+            console.log(message);
+        });
+
         this.ws.on('send online', (arr) => {
             this.renderId(arr);
             console.log(arr);
+        });
+        this.ws.on('server message', (message) => {
+            alert(message);
         })
 
     };
@@ -46,14 +57,29 @@ class Chat extends React.Component {
     };
 
     submitMessage = (value) => {
+        let emit = null;
+        if (this.state.room === null){
+            emit = 'output message';
+        }
+        else{
+            emit = 'room message';
+        }
         const message = value;
-        this.ws.emit('output message', message);
+        message.room = this.state.room;
+        console.log(message)
+        this.ws.emit(emit, message);
         this.addMessage(message);
     };
     submitRoom = (value) => {
         const room = value;
+        console.log(room);
+        this.setState({room: value.room})
         this.addRoom(room);
         this.ws.emit('create',room);
+    };
+    leaveRoom = () => {
+        this.ws.emit('leave room',this.state.room);
+        this.setState({room: null});     
     }
 
     render() {
@@ -65,6 +91,11 @@ class Chat extends React.Component {
                         onSubmitRoom={(value) => {
                             this.submitRoom(value)
                         }}
+                    />
+                    <LeaveBtn
+                    onLeaveRoom = {() =>{
+                        this.leaveRoom();
+                    }} 
                     />
                     {this.props.ids.ids.map((id, index) =>
                         <ClientList
