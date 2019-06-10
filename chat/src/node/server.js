@@ -16,6 +16,7 @@ const rQuit = /^.r/g;
 
 io.on('connection', (client) => {
   arrId.push(client.id);
+  arrClients.push(client);
   client.emit('send online',arrId);
   console.log('client connected');
   console.log(arrId.length);
@@ -27,6 +28,7 @@ io.on('connection', (client) => {
       return id === client.id;
     });
     arrId.splice(index,1);
+    arrClients.splice(index,1);
     client.emit('send online',arrId);
   });
 
@@ -35,8 +37,14 @@ io.on('connection', (client) => {
     // console.log(client.rooms);
   });
   client.on('create',(roomObj)=>{
+    const guestInd = io.clients.findIndex((client) => {
+      return client.id === roomObj.guest
+    });
+    const message = {
+      message: `user_id:${client.id} invited you to ${roomObj.room} `
+    }
+    arrClients[guestInd].emit('invite', message);
     client.join(roomObj.room);
-    console.log(roomObj.room);
   });
   client.on('room message',(message) => {
     client.broadcast.to(message.room).emit('input room',message);
