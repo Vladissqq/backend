@@ -39,6 +39,9 @@ class Chat extends React.Component {
         });
         this.ws.on('server message', (message) => {
             alert(message);
+        });
+        this.ws.on('invite', (message) => {
+            this.addMessage(message)
         })
 
     };

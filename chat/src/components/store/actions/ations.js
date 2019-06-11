@@ -17,4 +17,5 @@ export function room (formData) {
         type: 'ROOM',
         payload: formData
     }
-}
+};
+

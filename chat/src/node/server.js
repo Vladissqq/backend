@@ -1,6 +1,6 @@
 // const Websocket = require('ws');
 const io = require('socket.io')();
-
+io.origins('*:*');
 
 const arrId = [];
 const arrClients = [];
@@ -37,7 +37,7 @@ io.on('connection', (client) => {
     // console.log(client.rooms);
   });
   client.on('create',(roomObj)=>{
-    const guestInd = io.clients.findIndex((client) => {
+    const guestInd = arrClients.findIndex((client) => {
       return client.id === roomObj.guest
     });
     const message = {

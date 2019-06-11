@@ -5,7 +5,7 @@ const defaultState = {
 export function roomReducer(state = defaultState, action) {
     if(action.type === 'ROOM'){
         return {
-            rooms: [action.payload, ...state.rooms]
+            rooms: [action.payload]
         }
     }
     return state
