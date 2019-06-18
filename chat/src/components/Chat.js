@@ -15,7 +15,7 @@ import { room } from './store/actions/ations';
 const URL = 'ws://localhost:8124';
 class Chat extends React.Component {
     state = {
-        room: null,
+        room: 'all',
     }
 
     componentDidMount() {
@@ -59,19 +59,10 @@ class Chat extends React.Component {
         this.props.addRoomToStore(obj);
     };
 
-    submitMessage = (value) => {
-        let emit = null;
-        if (this.state.room === null){
-            emit = 'output message';
-        }
-        else{
-            emit = 'room message';
-        }
-        const message = value;
-        message.room = this.state.room;
-        console.log(message)
-        this.ws.emit(emit, message);
-        this.addMessage(message);
+    submitMessage = (obj) => {
+        obj.room = this.state.room;
+        this.ws.emit('output message',obj);
+        this.addMessage(obj);
     };
     submitRoom = (value) => {
         const room = value;

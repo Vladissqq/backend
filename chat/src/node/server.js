@@ -2,200 +2,86 @@
 const io = require('socket.io')();
 io.origins('*:*');
 
-const arrId = [];
-const arrClients = [];
-const arraysPrivate = {
-  count: 0
-};
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/test', {useNewUrlParser: true});
 
-const rList = /^.l/g;
-const rPort = /^(.p\d{5})$/gm;
-const rJoin = /^(.p\d{6})$/gm;
-const rQuit = /^.r/g;
-
-
-io.on('connection', (client) => {
-  arrId.push(client.id);
-  arrClients.push(client);
-  client.emit('send online',arrId);
-  console.log('client connected');
-  console.log(arrId.length);
-  
-
-  client.on('disconnect',() =>{
-    console.log('client disconnect');
-    const index = arrId.findIndex((id) =>{
-      return id === client.id;
-    });
-    arrId.splice(index,1);
-    arrClients.splice(index,1);
-    client.emit('send online',arrId);
-  });
-
-  client.on('output message',(message) => {
-    client.broadcast.emit('input message',message);
-    // console.log(client.rooms);
-  });
-  client.on('create',(roomObj)=>{
-    const guestInd = arrClients.findIndex((client) => {
-      return client.id === roomObj.guest
-    });
-    const message = {
-      message: `user_id:${client.id} invited you to ${roomObj.room} `
-    }
-    arrClients[guestInd].emit('invite', message);
-    client.join(roomObj.room);
-  });
-  client.on('room message',(message) => {
-    client.broadcast.to(message.room).emit('input room',message);
-  });
-  client.on('leave room',(room) =>{
-    client.leave(room);
-    client.emit('server message','you left the room');
-  })
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log('ok')
 });
 
+var kittySchema = new mongoose.Schema({
+  name: String
+});
 
-const port = 8124;
-io.listen(port);
-console.log('listening on port ', port);
-// const server = new Websocket.Server({
-//   port: 8124
-// });
+var Kitten = mongoose.model('Kitten', kittySchema);
 
-// server.on('connection', (c) => {
-//   const obj = {
-//     port: null,
-//     c: c,
-//     private: null
-//   };
+var silence = new Kitten({ name: 'Silence' });
+console.log(silence.name); // 'Silence'
 
-//   const cPort = rand(10000, 99999);
-//   obj.port = cPort;
-//   arrClients.push(obj)
-//   arrPorts.push(cPort);
-//   const objList = {
-//     message: null,
-//     list: arrPorts
-//   }
-//   console.log(arrClients.length);
-//   console.log(arrPorts);
-//   server.clients.forEach(c=> c.send(JSON.stringify(objList)));
+kittySchema.methods.speak = function () {
+  var greeting = this.name
+    ? "Meow name is " + this.name
+    : "I don't have a name";
+  console.log(greeting);
+}
 
-//   const finderC = function finderC(obj) {
-//     return obj.port === cPort;
-//   };
-//   // 'connection' listener
+var Kitten = mongoose.model('Kitten', kittySchema);
 
-//   // console.log(arrClients);
+var fluffy = new Kitten({ name: 'fluffy' });
+fluffy.speak(); // "Meow name is fluffy"
 
-//   c.onclose = () => {
-//     const index = arrClients.findIndex(finderC);
+fluffy.save(function (err, fluffy) {
+  if (err) return console.error(err);
+  fluffy.speak();
+});
+// const arrId = [];
+// const arrClients = [];
+// const rooms = ['all'];
+
+// io.on('connection', (client) => {
+//   client.join('all');
+//   arrId.push(client.id);
+//   arrClients.push(client);
+//   client.emit('send online',arrId);
+//   console.log('client connected');
+//   console.log(arrId.length);
+  
+
+//   client.on('disconnect',() =>{
+//     console.log('client disconnect');
+//     const index = arrId.findIndex((id) =>{
+//       return id === client.id;
+//     });
+//     arrId.splice(index,1);
 //     arrClients.splice(index,1);
-//     arrPorts.splice(index,1);
-//     console.log('client disconnected');
-//   };
+//     client.emit('send online',arrId);
+//   });
 
-//   c.onmessage = (e) => {
-//     const dataJSON = e.data;
-//     const data = JSON.parse(e.data);
-//     const dat = data.message.toString().trim();
-
-    
-//     const objMessage = {
-//       message: null,
-//       list: null
-//     };
-//     objMessage.message = dat;
-//     console.log(objMessage);
-
-
-//     let i = arraysPrivate.count;
-
-//     const finder = function finder(obj) {
-//       return obj.port.toString() === dat.toString().substring(2).trim();
-//     };
-
-//     const returnRoom = function finderRoom(i) {
-//       return dat.toString().substring(2).trim();
-//     };
-
-//     const returnStatus = function returnStatus(obj) {
-//       return obj.private === null;
-//     };
-
-//     const notThisUser = function notThisUser(obj) {
-//       return obj.port !== cPort;
+//   client.on('output message',(message) => {
+//       client.broadcast.to(message.room).emit('input room',message);
+//   });
+//   client.on('create',(roomObj)=>{
+//     rooms.push(roomObj.room);
+//     const guestInd = arrClients.findIndex((client) => {
+//       return client.id === roomObj.guest
+//     });
+//     const message = {
+//       message: `user_id:${client.id} invited you to ${roomObj.room} `
 //     }
-
-
-
-//     // if (rQuit.test(dat)) {
-//     //   const indexUser = arrClients.findIndex(finderC);
-//     //   console.log('indexUse_' + indexUser);
-
-//     //   if (arrClients[indexUser].private !== null) {
-//     //     const room = arraysPrivate[arrClients[indexUser].private];
-//     //     const indexUserInPrivate = room.findIndex(finderC);
-//     //     arrClients[indexUser].private = null;
-//     //     console.log(arrClients);
-//     //     room.splice(indexUserInPrivate, 1);
-//     //     console.log('------------');
-//     //     console.log(room);
-//     //   }
-
-//     // }
-//     console.log(rPort.test(dat));
-//     if (rPort.test(dat)) {
-//       console.log('hi');
-//       const guest = arrClients.find(finder);
-//       const inviter = arrClients.find(finderC);
-//       const indInviter = arrClients.findIndex(finderC);
-//       arrClients[indInviter].private = `${arrClients[indInviter].private}${i}`;
-//       arraysPrivate[`${arrClients[indInviter].private}${i}`] = [inviter];
-      
-//       objMessage.message = `You was invite in private chat. command for join: /p${arrClients[indInviter].private}${i}`;
-//       console.log(guest);
-//       guest.c.send(JSON.stringify(objMessage));
-//     };
-
-//     // if (rJoin.test(dat)) {
-//     //   const guest = arrClients.find(finderC);
-//     //   const indGuest = arrClients.findIndex(finderC);
-//     //   arrClients[indGuest].private = dat.toString().substring(2).trim();
-//     //   console.log(arrClients[indGuest].private);
-//     //   arraysPrivate[returnRoom()].push(guest);
-//     // };
-
-
-
-
-//     if (dat[0] !== '/') {
-//       const indUser = arrClients.findIndex(finderC);
-
-//       if (arrClients[indUser].private === null) {
-//         const f = arrClients.filter(returnStatus);
-//         const filtr = f.filter(notThisUser);
-        
-//         filtr.forEach((obj) => {
-//           obj.c.send(JSON.stringify(objMessage));
-//         });
-//       }
-//       else {
-//         const indUser = arrClients.findIndex(finderC);
-//         const idOfRoom = arrClients[indUser].private.toString();
-//         const room = arraysPrivate[idOfRoom];
-//         const filter = room.filter(notThisUser);
-//         filter.forEach(c => c.c.send(`private-user-${cPort}: ${data}`));
-//       }
-//     };
-//     // arraysPrivate[i] = arrClients[0];
-//     arraysPrivate.count++;
-//     // console.log(arraysPrivate)
-//   };
+//     arrClients[guestInd].emit('invite', message);
+//     client.join(roomObj.room);
+//   });
+  
+//   client.on('leave room',(room) =>{
+//     client.leave(room);
+//     client.emit('server message','you left the room');
+//   })
 // });
 
-// server.onerror = (err) => {
-//   throw err;
-// };
+
+// const port = 8124;
+// io.listen(port);
+// console.log('listening on port ', port);
 
