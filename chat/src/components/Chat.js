@@ -17,7 +17,7 @@ class Chat extends React.Component {
     state = {
         room: 'all',
     }
-
+    
     componentDidMount() {
         this.ws = openSocket(URL);
         this.ws.on('connect', () => {

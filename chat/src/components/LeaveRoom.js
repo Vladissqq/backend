@@ -1,10 +1,11 @@
 import React from 'react';
+import './LeaveRoom.css';
 
 
 export default function (props) {
     return (
-        <button className = ' btn btn-dark' onClick = {() =>{
+        <button className = ' btn btn-outline-info' onClick = {() =>{
             props.onLeaveRoom();
-        }}>LEAVE ROOM</button>
+        }}>Leave room</button>
     )
 }

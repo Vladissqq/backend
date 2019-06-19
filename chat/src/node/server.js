@@ -1,87 +1,106 @@
-// const Websocket = require('ws');
-const io = require('socket.io')();
-io.origins('*:*');
-
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/test', {useNewUrlParser: true});
+const Room = require('./models/Room');
+const Message = require('./models/Message');
+// const cors = require('cors');
 
+const app = require('express')();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+
+const port = 8124;
+
+// app.use(cors());
+
+io.origins('*:*');
+mongoose.connect('mongodb://localhost:27017/test', { useNewUrlParser: true });
 const db = mongoose.connection;
+
 db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
+db.once('open', function () {
   console.log('ok')
 });
 
-var kittySchema = new mongoose.Schema({
-  name: String
+const room = new Room({
+  _id: new mongoose.Types.ObjectId(),
+  name: 'all',
+  messages: []
 });
 
-var Kitten = mongoose.model('Kitten', kittySchema);
+room.save((err) => {
+  if (err) throw err;
+})
 
-var silence = new Kitten({ name: 'Silence' });
-console.log(silence.name); // 'Silence'
 
-kittySchema.methods.speak = function () {
-  var greeting = this.name
-    ? "Meow name is " + this.name
-    : "I don't have a name";
-  console.log(greeting);
-}
+const arrId = [];
+const arrClients = [];
+const rooms = ['all'];
 
-var Kitten = mongoose.model('Kitten', kittySchema);
-
-var fluffy = new Kitten({ name: 'fluffy' });
-fluffy.speak(); // "Meow name is fluffy"
-
-fluffy.save(function (err, fluffy) {
-  if (err) return console.error(err);
-  fluffy.speak();
+app.post('http://localhost:3000/#/', function (req, res) {
+  const tokken = req;
+  console.log('correct');
 });
-// const arrId = [];
-// const arrClients = [];
-// const rooms = ['all'];
 
-// io.on('connection', (client) => {
-//   client.join('all');
-//   arrId.push(client.id);
-//   arrClients.push(client);
-//   client.emit('send online',arrId);
-//   console.log('client connected');
-//   console.log(arrId.length);
-  
+io.on('connection', (client) => {
 
-//   client.on('disconnect',() =>{
-//     console.log('client disconnect');
-//     const index = arrId.findIndex((id) =>{
-//       return id === client.id;
-//     });
-//     arrId.splice(index,1);
-//     arrClients.splice(index,1);
-//     client.emit('send online',arrId);
-//   });
-
-//   client.on('output message',(message) => {
-//       client.broadcast.to(message.room).emit('input room',message);
-//   });
-//   client.on('create',(roomObj)=>{
-//     rooms.push(roomObj.room);
-//     const guestInd = arrClients.findIndex((client) => {
-//       return client.id === roomObj.guest
-//     });
-//     const message = {
-//       message: `user_id:${client.id} invited you to ${roomObj.room} `
-//     }
-//     arrClients[guestInd].emit('invite', message);
-//     client.join(roomObj.room);
-//   });
-  
-//   client.on('leave room',(room) =>{
-//     client.leave(room);
-//     client.emit('server message','you left the room');
-//   })
-// });
+  client.join('all');
+  arrId.push(client.id);
+  arrClients.push(client);
+  client.emit('send online', arrId);
+  console.log('client connected');
+  console.log(arrId.length);
 
 
-// const port = 8124;
-// io.listen(port);
-// console.log('listening on port ', port);
+  client.on('disconnect', () => {
+    console.log('client disconnect');
+    const index = arrId.findIndex((id) => {
+      return id === client.id;
+    });
+    arrId.splice(index, 1);
+    arrClients.splice(index, 1);
+    client.emit('send online', arrId);
+  });
+
+  client.on('output message', (message) => {
+    Room.findOne({ name: message.room }).exec(
+      (err, room) => {
+        const messages = room.messages;
+        messages.push(message);
+        room.messages = messages;
+        room.save();
+      }
+    );
+    client.broadcast.to(message.room).emit('input room', message);
+  });
+  client.on('create', (roomObj) => {
+
+    const customRoom = new Room({
+      _id: new mongoose.Types.ObjectId(),
+      name: roomObj.room,
+      messages: []
+    });
+
+    customRoom.save();
+
+    rooms.push(roomObj.room);
+    const guestInd = arrClients.findIndex((client) => {
+      return client.id === roomObj.guest
+    });
+    const message = {
+      message: `user_id:${client.id} invited you to ${roomObj.room} `
+    }
+    arrClients[guestInd].emit('invite', message);
+    client.join(roomObj.room);
+  });
+
+  client.on('leave room', (room) => {
+    client.leave(room);
+    client.emit('server message', 'you left the room');
+  })
+});
+
+
+http.listen(port, () => {
+  console.log('SERVER started on port number: '+port);
+});
+
 

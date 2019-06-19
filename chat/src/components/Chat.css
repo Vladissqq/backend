@@ -5,6 +5,7 @@
     background-color: #f5f5f6;
     width: 40%;
     height: 80vh;
+    padding: 13px;
 }
 .message-container{
     overflow: hidden;

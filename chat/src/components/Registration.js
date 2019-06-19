@@ -1,6 +1,7 @@
 import React from 'react';
 import './registration.css';
-import googleLogo from './google.png'
+import googleLogo from './google.png';
+import axios from 'axios';
 
 export default class Registration extends React.Component {
     componentDidMount() {
@@ -24,16 +25,17 @@ export default class Registration extends React.Component {
         
           // метод возвращает объект пользователя
           // где есть все необходимые нам поля
-          const profile = googleUser.getBasicProfile()
-          console.log('ID: ' + profile.getId()) // не посылайте подобную информацию напрямую, на ваш сервер!
-          console.log('Full Name: ' + profile.getName())
-          console.log('Given Name: ' + profile.getGivenName())
-          console.log('Family Name: ' + profile.getFamilyName())
-          console.log('Image URL: ' + profile.getImageUrl())
-          console.log('Email: ' + profile.getEmail())
+          const profile = googleUser.getBasicProfile();
+          console.log('ID: ' + profile.getId()); // не посылайте подобную информацию напрямую, на ваш сервер!
+          console.log('Full Name: ' + profile.getName());
+          console.log('Given Name: ' + profile.getGivenName());
+          console.log('Family Name: ' + profile.getFamilyName());
+          console.log('Image URL: ' + profile.getImageUrl());
+          console.log('Email: ' + profile.getEmail());
     
           // токен
-          const id_token = googleUser.getAuthResponse().id_token
+          const id_token = googleUser.getAuthResponse().id_token;
+          axios.post('http://localhost:3000/#/',{id_token: 'lol'});
           console.log('ID Token: ' + id_token)
         })
       }
