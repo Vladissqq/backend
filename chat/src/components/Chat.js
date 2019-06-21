@@ -3,21 +3,41 @@ import ChatInput from './ChatInput';
 import Messager from './Messager';
 import LeaveBtn from './LeaveRoom';
 import ClientList from './List';
-import PrivateRoom from './PrivateRoom'
+import PrivateRoom from './PrivateRoom';
+import Profile from './Profile';
 import './Chat.css';
 import openSocket from 'socket.io-client';
 import { connect } from 'react-redux';
 import { write } from './store/actions/ations';
 import { idOnline } from './store/actions/ations';
 import { room } from './store/actions/ations';
+import { inf } from './store/actions/ations';
+import axios from 'axios';
 
 
 const URL = 'ws://localhost:8124';
 class Chat extends React.Component {
     state = {
         room: 'all',
+        info: null
     }
-    
+
+    componentWillMount() {
+        axios.get('http://localhost:8124/get_info')
+            .then(
+                (res) => {
+                    const info = {
+                        email: res.data.email,
+                        firstName: res.data.given_name,
+                        secondName: res.data.family_name,
+                        picture: res.data.picture
+                    };
+                    console.log(info)
+                    this.addInfo(info)
+                }
+            );
+    }
+
     componentDidMount() {
         this.ws = openSocket(URL);
         this.ws.on('connect', () => {
@@ -28,7 +48,7 @@ class Chat extends React.Component {
             this.addMessage(message);
         });
 
-        this.ws.on('input room',(message) => {
+        this.ws.on('input room', (message) => {
             this.addMessage(message);
             console.log(message);
         });
@@ -42,8 +62,7 @@ class Chat extends React.Component {
         });
         this.ws.on('invite', (message) => {
             this.addMessage(message)
-        })
-
+        });
     };
 
     renderId = (arr) => {
@@ -55,25 +74,30 @@ class Chat extends React.Component {
 
     };
 
+    addInfo = (info) => {
+        this.props.addInfoToStore(info);
+    };
+
     addRoom = (obj) => {
         this.props.addRoomToStore(obj);
     };
 
     submitMessage = (obj) => {
         obj.room = this.state.room;
-        this.ws.emit('output message',obj);
+        obj.name = this.props.info.info.firstName;
+        this.ws.emit('output message', obj);
         this.addMessage(obj);
     };
     submitRoom = (value) => {
         const room = value;
         console.log(room);
-        this.setState({room: value.room})
+        this.setState({ room: value.room })
         this.addRoom(room);
-        this.ws.emit('create',room);
+        this.ws.emit('create', room);
     };
     leaveRoom = () => {
-        this.ws.emit('leave room',this.state.room);
-        this.setState({room: null});     
+        this.ws.emit('leave room', this.state.room);
+        this.setState({ room: null });
     }
 
     render() {
@@ -87,9 +111,9 @@ class Chat extends React.Component {
                         }}
                     />
                     <LeaveBtn
-                    onLeaveRoom = {() =>{
-                        this.leaveRoom();
-                    }} 
+                        onLeaveRoom={() => {
+                            this.leaveRoom();
+                        }}
                     />
                     {this.props.ids.ids.map((id, index) =>
                         <ClientList
@@ -98,12 +122,15 @@ class Chat extends React.Component {
                         />
                     )}
                 </div>
+                <div className='sider'>
+                    <Profile info={this.props.info.info} />
+                </div>
                 <div className='message-container' >
                     {this.props.message.messages.map((message, index) =>
                         <Messager
                             key={index}
                             message={message.message}
-
+                            name={message.name}
                         />,
                     )}
                 </div>
@@ -113,21 +140,6 @@ class Chat extends React.Component {
                     }}
                 />
             </div>
-
-            // <div className='chat'>
-            //     <div className='message-container' >
-            //     {this.state.messages.map((message, index) =>
-            //         <Messager
-            //             key={index}
-            //             message={message.message}
-
-            //         />,
-            //     )}
-            //     </div>
-
-
-
-            // </div>
         )
     }
 };
@@ -137,14 +149,16 @@ function mapDispatchToProps(dispatch) {
     return {
         addMesageToStore: (message) => dispatch(write(message)),
         pushIdToStore: (arr) => dispatch(idOnline(arr)),
-        addRoomToStore: (obj) => dispatch(room(obj))
+        addRoomToStore: (obj) => dispatch(room(obj)),
+        addInfoToStore: (info) => dispatch(inf(info))
     }
 }
 function mapStateToProps(state) {
     return {
         message: state.message,
         ids: state.id,
-        rooms: state.room
+        rooms: state.room,
+        info: state.info
     }
 }
 

@@ -1,19 +1,27 @@
 const mongoose = require('mongoose');
 const Room = require('./models/Room');
 const Message = require('./models/Message');
+const User = require('./models/User');
 // const cors = require('cors');
 
 const app = require('express')();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
 
 const port = 8124;
 
+app.use( bodyParser.json() );
+app.use( bodyParser.urlencoded({extended:true}) );
+app.use( cors() );
 // app.use(cors());
 
 io.origins('*:*');
 mongoose.connect('mongodb://localhost:27017/test', { useNewUrlParser: true });
 const db = mongoose.connection;
+// mongoose.set('debug', true); 
 
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
@@ -34,11 +42,18 @@ room.save((err) => {
 const arrId = [];
 const arrClients = [];
 const rooms = ['all'];
+let decoded = null;
 
-app.post('http://localhost:3000/#/', function (req, res) {
-  const tokken = req;
-  console.log('correct');
+app.post('/auth', function (req, res) {
+  decoded = jwt.decode(req.body.tokken);
+  console.log(decoded);
+  res.status(200).send('auth correct');
 });
+
+app.get('/get_info', function (req, res) {
+
+  res.status(200).send(decoded);
+})
 
 io.on('connection', (client) => {
 

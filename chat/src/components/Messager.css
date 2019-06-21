@@ -3,5 +3,6 @@
     padding: 10px;
     background-color: #80deea;
     border-radius: 15px;
-    width: 30%;
+    width: 45%;
+    word-wrap: break-word ;
 }
