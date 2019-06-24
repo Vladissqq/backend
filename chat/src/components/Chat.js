@@ -13,6 +13,7 @@ import { idOnline } from './store/actions/ations';
 import { room } from './store/actions/ations';
 import { inf } from './store/actions/ations';
 import axios from 'axios';
+import { Redirect } from "react-router-dom";
 
 
 const URL = 'ws://localhost:8124';
@@ -63,6 +64,11 @@ class Chat extends React.Component {
         this.ws.on('invite', (message) => {
             this.addMessage(message)
         });
+        this.ws.on('history', (hist) => {
+            hist.messages.forEach(e => {
+                this.addMessage(e);
+            });
+        })
     };
 
     renderId = (arr) => {
@@ -101,7 +107,7 @@ class Chat extends React.Component {
     }
 
     render() {
-        console.log(this.props);
+        
         return (
             <div className='chat'>
                 <div className='sider'>

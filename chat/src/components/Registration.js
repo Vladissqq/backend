@@ -2,6 +2,7 @@ import React from 'react';
 import './registration.css';
 import googleLogo from './google.png';
 import axios from 'axios';
+import { Redirect } from "react-router-dom";
 
 export default class Registration extends React.Component {
   state = {
@@ -36,7 +37,7 @@ export default class Registration extends React.Component {
       axios.post('http://localhost:8124/auth', {tokken: id_token})
         .then(
           (res) => {
-            console.log(res.data);
+            window.localStorage.setItem("email_chat",res.data)
           }
         );
     
@@ -49,8 +50,13 @@ export default class Registration extends React.Component {
     })
   };
   register = (e) => {
-    localStorage.setItem("userName",e.target.elements.name.value);
-    localStorage.setItem("email",e.target.elements.email.value);
+    window.localStorage.setItem("userName",e.target.elements.name.value);
+    window.localStorage.setItem("email_chat",e.target.elements.email.value);
+    const user = {
+      email: e.target.elements.email.value,
+      userName: e.target.elements.name.value
+    }
+    axios.post('http://localhost:8124/register', user)
   }
   render() {
     return (

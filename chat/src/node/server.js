@@ -13,9 +13,9 @@ const jwt = require('jsonwebtoken');
 
 const port = 8124;
 
-app.use( bodyParser.json() );
-app.use( bodyParser.urlencoded({extended:true}) );
-app.use( cors() );
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
 // app.use(cors());
 
 io.origins('*:*');
@@ -46,9 +46,33 @@ let decoded = null;
 
 app.post('/auth', function (req, res) {
   decoded = jwt.decode(req.body.tokken);
-  console.log(decoded);
-  res.status(200).send('auth correct');
+  const user = new User({
+    _id: new mongoose.Types.ObjectId(),
+    firstName: decoded.given_name,
+    secondName: decoded.family_name,
+    email: decoded.email,
+    img: decoded.picture,
+    google: true
+  });
+  if (!User.findOne({ email: decoded.email })) {
+    user.save();
+  }
+
+  res.status(200).send(decoded.email);
 });
+
+app.post('/register', function (req, res) {
+  if(User.findOne({ email: req.body.email })){
+    const user = new User({
+      _id: new mongoose.Types.ObjectId(),
+      firstName: req.body.userName,
+      secondName: '',
+      email: req.body.email,
+      img: 'https://cdn3.vectorstock.com/i/1000x1000/04/77/sun-line-icon-simple-minimal-96x96-pictogram-vector-20450477.jpg',
+      google: false
+    });
+  }
+})
 
 app.get('/get_info', function (req, res) {
 
@@ -56,7 +80,14 @@ app.get('/get_info', function (req, res) {
 })
 
 io.on('connection', (client) => {
-
+  Room.findOne({ name: 'all' }).exec(
+    (err, room) => {
+      const history = {
+        messages: room.messages,
+      }
+      client.emit('history', history)
+    }
+  )
   client.join('all');
   arrId.push(client.id);
   arrClients.push(client);
@@ -78,8 +109,15 @@ io.on('connection', (client) => {
   client.on('output message', (message) => {
     Room.findOne({ name: message.room }).exec(
       (err, room) => {
+        console.log(message);
+        const mes = new Message({
+          id: new mongoose.Types.ObjectId(),
+          name: message.name,
+          message: message.message,
+          room: message.room
+        });
         const messages = room.messages;
-        messages.push(message);
+        messages.push(mes);
         room.messages = messages;
         room.save();
       }
@@ -115,7 +153,7 @@ io.on('connection', (client) => {
 
 
 http.listen(port, () => {
-  console.log('SERVER started on port number: '+port);
+  console.log('SERVER started on port number: ' + port);
 });
 
 
