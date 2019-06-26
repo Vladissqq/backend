@@ -1,6 +1,8 @@
 import React from 'react';
 import './navbar.css';
-import { Redirect } from "react-router-dom";
+import { createBrowserHistory } from 'history';
+
+const history = createBrowserHistory();
 
 
 export default function navbar() {
@@ -13,10 +15,15 @@ export default function navbar() {
       <div className="collapse navbar-collapse" id="navbarText">
         <ul className="navbar-nav mr-auto">
           <li className="nav-item">
-            <a className="nav-link" href='#/homepage/'>Home</a>
+            <button className='input-btn btn'> Home </button>
           </li>
           <li className="nav-item">
-            <button className='input-btn btn' onClick={localStorage.clear()}>Log out</button>
+            <form>
+              <button className='input-btn btn' onClick={() => {
+                localStorage.clear();
+                history.push('/');
+              }}>Log out</button>
+            </form>
           </li>
         </ul>
       </div>

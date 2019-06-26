@@ -5,6 +5,7 @@ import { HashRouter, Route, Switch } from "react-router-dom";
 import { Login } from './Login';
 import {Provider} from 'react-redux';
 import {store} from './store/reducers/index';
+import {CheckLocal} from './CheckLocal';
 
 
 class App extends Component {
@@ -17,7 +18,8 @@ class App extends Component {
         <HashRouter>
           <div>
             <Switch>
-            <Route exact path='/' component={Login} />
+            <Route exact path='/' component={CheckLocal} />
+            <Route path='/registration' component={Login} />
             <Route path='/homepage' component={Chat} />
             </Switch>
           </div>

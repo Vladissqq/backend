@@ -2,9 +2,13 @@ import React from 'react';
 import './registration.css';
 import googleLogo from './google.png';
 import axios from 'axios';
+import { createBrowserHistory } from 'history';
 import { Redirect } from "react-router-dom";
 
+const history = createBrowserHistory();
+
 export default class Registration extends React.Component {
+
   state = {
     userName: undefined,
   };
@@ -49,21 +53,25 @@ export default class Registration extends React.Component {
       console.log('User signed out.')
     })
   };
-  register = (e) => {
+  register(e) {
     window.localStorage.setItem("userName",e.target.elements.name.value);
     window.localStorage.setItem("email_chat",e.target.elements.email.value);
     const user = {
       email: e.target.elements.email.value,
       userName: e.target.elements.name.value
     }
-    axios.post('http://localhost:8124/register', user)
+    axios.post('http://localhost:8124/register', user);
+    history.push('/#/homepage');
   }
   render() {
     return (
       <div>
-        <form onSubmit = {(e) =>{
-          this.register(e);
-        }}>
+        {
+          localStorage.getItem('email_chat') ?
+          <Redirect to='/homepage' />
+          :
+          <div>
+        <form onSubmit = {(e) => this.register(e, this.props)}>
           <div className="form-group">
             <label htmlFor="exampleInputEmail1">Email address</label>
             <input name='email' type="email" className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email" />
@@ -86,6 +94,8 @@ export default class Registration extends React.Component {
             <button onClick={this.signOut} className="btn btn-info">Log out</button>
           </header>
         </div>
+      </div>
+        }
       </div>
     )
   };

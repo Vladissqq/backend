@@ -14,6 +14,9 @@ import { room } from './store/actions/ations';
 import { inf } from './store/actions/ations';
 import axios from 'axios';
 import { Redirect } from "react-router-dom";
+import { createBrowserHistory } from 'history';
+
+const history = createBrowserHistory();
 
 
 const URL = 'ws://localhost:8124';
@@ -108,7 +111,8 @@ class Chat extends React.Component {
 
     render() {
         
-        return (
+        return (<div>
+            {localStorage.getItem('email_chat') ?
             <div className='chat'>
                 <div className='sider'>
                     <PrivateRoom
@@ -146,6 +150,11 @@ class Chat extends React.Component {
                     }}
                 />
             </div>
+            :
+            <Redirect to='/'/>
+            }
+        </div>
+            
         )
     }
 };
