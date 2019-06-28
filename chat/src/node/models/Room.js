@@ -7,7 +7,7 @@ const roomSchema = mongoose.Schema({
     messages: {
       type: Array,
       default: []
-    }
+    },
   });
   
   const Room = mongoose.model('Room', roomSchema);

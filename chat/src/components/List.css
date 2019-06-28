@@ -1,0 +1,17 @@
+.user-container{
+    display: flex;
+    margin-bottom: 7px;
+    background-color: #b2ebf2;
+    border-radius: 13px;    
+}
+
+.text-container{
+    padding: 5px
+}
+
+.photo{
+    border-radius: 13px;  
+    width: 13%;
+    height: 13%;
+};
+

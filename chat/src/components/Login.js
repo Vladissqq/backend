@@ -5,10 +5,9 @@ import './login.css';
     render(){
         return(
             <div className = 'registraition-form--container'>
-                <Registration/>
+                <Registration history = {this.props.history}/>
             </div>
         )
-        
     }
 }
 

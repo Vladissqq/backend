@@ -11,6 +11,10 @@ const UserSchema = mongoose.Schema( {
     default: 'User'
   },
   email: String,
+  rooms: {
+    type: Array,
+    default: []
+  },
   img: String,
   google: Boolean
 })

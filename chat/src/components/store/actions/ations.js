@@ -24,4 +24,11 @@ export function inf(info) {
         type: 'INFO',
         payload: info
     }
+};
+
+export function users(users) {
+    return {
+        type: 'USERS',
+        payload: users
+    }
 }

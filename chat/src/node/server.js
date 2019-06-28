@@ -31,20 +31,27 @@ db.once('open', function () {
 const room = new Room({
   _id: new mongoose.Types.ObjectId(),
   name: 'all',
-  messages: []
+  messages: [],
 });
 
-room.save((err) => {
-  if (err) throw err;
-})
+Room.find({ name: /all/i }).exec(
+  (err, rooms) => {
+    if (rooms.length === 0) {
+      room.save()
+    }
+  }
+)
 
 
 const arrId = [];
 const arrClients = [];
-const rooms = ['all'];
+const arrEmails = [];
+const rooms = [];
 let decoded = null;
+let info = null;
 
 app.post('/auth', function (req, res) {
+
   decoded = jwt.decode(req.body.tokken);
   const user = new User({
     _id: new mongoose.Types.ObjectId(),
@@ -52,31 +59,99 @@ app.post('/auth', function (req, res) {
     secondName: decoded.family_name,
     email: decoded.email,
     img: decoded.picture,
-    google: true
+    google: true,
+    rooms: ['all']
   });
-  if (!User.findOne({ email: decoded.email })) {
-    user.save();
+  User.find({ email: decoded.email }).exec(
+    (err, users) => {
+      if (users.length === 0) {
+        console.log('new user');
+        user.save();
+      }
+    }
+  )
+
+  info = {
+    email: decoded.email,
+    firstName: decoded.given_name,
+    secondName: decoded.family_name,
+    picture: decoded.picture
   }
 
   res.status(200).send(decoded.email);
 });
 
+app.post('/rooms', function (req,res) {
+  console.log(req.body.email);
+  User.findOne({email: req.body.email}).exec(
+    (err,user) => {
+      if(user) {
+        res.status(200).send(user.rooms);
+      }
+    }
+  )
+})
+
+app.get('/users', function (req,res) {
+  User.find().exec(
+    (err,users) =>{
+      res.status(200).send(users)
+    }
+  )
+});
+
+
+app.post('/invite',function(req,res) {
+
+  User.findOne({email: req.body.guest.email}).exec(
+    (err,user) => {
+      const room = user.rooms.find((el) => {
+        return el === req.body.guest.room
+      });
+
+      if(!room){
+        user.rooms.push(req.body.guest.room);
+        user.save(); 
+        const indGuest = arrEmails.indexOf(req.body.guest.email);
+        if(indGuest >= 0){
+          arrClients[indGuest].emit('join',req.body.guest.room)
+        }
+      }
+    }
+  )
+})
+
 app.post('/register', function (req, res) {
-  if(User.findOne({ email: req.body.email })){
-    const user = new User({
-      _id: new mongoose.Types.ObjectId(),
-      firstName: req.body.userName,
-      secondName: '',
-      email: req.body.email,
-      img: 'https://cdn3.vectorstock.com/i/1000x1000/04/77/sun-line-icon-simple-minimal-96x96-pictogram-vector-20450477.jpg',
-      google: false
-    });
+  User.find({ email: req.body.info.email }).exec(
+    (err, users) => {
+      if (users.length === 0) {
+        const user = new User({
+          _id: new mongoose.Types.ObjectId(),
+          firstName: req.body.info.userName,
+          secondName: '',
+          email: req.body.info.email,
+          img: 'https://freeicons.io/laravel/public/uploads/icons/png/5770622851556281668-64.png',
+          google: false,
+          rooms: ['all']
+        });
+
+        user.save();
+      }
+    }
+  )
+
+  info = {
+    email: req.body.info.email,
+    firstName: req.body.info.userName,
+    secondName: 'xxx',
+    picture: 'https://freeicons.io/laravel/public/uploads/icons/png/5770622851556281668-64.png'
   }
+
+  res.status(200).send(info.email);
 })
 
 app.get('/get_info', function (req, res) {
-
-  res.status(200).send(decoded);
+  res.status(200).send(info);
 })
 
 io.on('connection', (client) => {
@@ -88,13 +163,12 @@ io.on('connection', (client) => {
       client.emit('history', history)
     }
   )
+
   client.join('all');
   arrId.push(client.id);
   arrClients.push(client);
   client.emit('send online', arrId);
   console.log('client connected');
-  console.log(arrId.length);
-
 
   client.on('disconnect', () => {
     console.log('client disconnect');
@@ -103,13 +177,29 @@ io.on('connection', (client) => {
     });
     arrId.splice(index, 1);
     arrClients.splice(index, 1);
+    arrEmails.splice(index, 1);
     client.emit('send online', arrId);
   });
+
+  client.on('accept_invite', (room) =>{
+    rooms.push(room)
+  })
+
+  client.on('send_email',(email) => {
+    arrEmails.push(email);
+    User.findOne({email: email}).exec(
+      (err,user) => {
+ 
+      }
+    )
+  });
+  client.on('remove_email',() => {
+    console.log('is work')
+  })
 
   client.on('output message', (message) => {
     Room.findOne({ name: message.room }).exec(
       (err, room) => {
-        console.log(message);
         const mes = new Message({
           id: new mongoose.Types.ObjectId(),
           name: message.name,
@@ -125,23 +215,30 @@ io.on('connection', (client) => {
     client.broadcast.to(message.room).emit('input room', message);
   });
   client.on('create', (roomObj) => {
+    //addd room to BD
+    Room.find({name: roomObj.room}).exec(
+      (err,r) =>{
+        if(r.length === 0 ) {
+          const customRoom = new Room({
+            _id: new mongoose.Types.ObjectId(),
+            name: roomObj.room,
+            messages: []
+          });
+          rooms.push(roomObj.room);
+          customRoom.save();
+        }
+      }
+    );
 
-    const customRoom = new Room({
-      _id: new mongoose.Types.ObjectId(),
-      name: roomObj.room,
-      messages: []
-    });
+    User.findOne({email: roomObj.email}).exec(
+      (err,user) => {
+        if(user.rooms.indexOf(roomObj.room) < 0){
+          user.rooms.push(roomObj.room)
+        }
+      }
+    )
 
-    customRoom.save();
-
-    rooms.push(roomObj.room);
-    const guestInd = arrClients.findIndex((client) => {
-      return client.id === roomObj.guest
-    });
-    const message = {
-      message: `user_id:${client.id} invited you to ${roomObj.room} `
-    }
-    arrClients[guestInd].emit('invite', message);
+    //socket 
     client.join(roomObj.room);
   });
 

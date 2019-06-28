@@ -12,11 +12,11 @@ import { write } from './store/actions/ations';
 import { idOnline } from './store/actions/ations';
 import { room } from './store/actions/ations';
 import { inf } from './store/actions/ations';
+import { users} from './store/actions/ations';
 import axios from 'axios';
 import { Redirect } from "react-router-dom";
-import { createBrowserHistory } from 'history';
+import RoomList from './RoomsList';
 
-const history = createBrowserHistory();
 
 
 const URL = 'ws://localhost:8124';
@@ -27,25 +27,44 @@ class Chat extends React.Component {
     }
 
     componentWillMount() {
+
+    }
+
+    componentDidMount() {
         axios.get('http://localhost:8124/get_info')
             .then(
                 (res) => {
                     const info = {
                         email: res.data.email,
-                        firstName: res.data.given_name,
-                        secondName: res.data.family_name,
+                        firstName: res.data.firstName,
+                        secondName: res.data.secondName,
                         picture: res.data.picture
                     };
-                    console.log(info)
+
                     this.addInfo(info)
                 }
             );
-    }
 
-    componentDidMount() {
+        axios.get('http://localhost:8124/users')
+            .then(
+                (res) => {
+                    this.addUsers(res.data);
+                }
+            )
+            axios.post('http://localhost:8124/rooms',{email: localStorage.getItem('email_chat')})
+            .then(
+                (res) => {
+                    res.data.forEach((el) => {
+                        this.addRoom(el);
+                    })
+                }
+            )   
+
+
         this.ws = openSocket(URL);
         this.ws.on('connect', () => {
             console.log('connected');
+            this.ws.emit('send_email',localStorage.getItem('email_chat'));
         });
 
         this.ws.on('input message', (message) => {
@@ -53,14 +72,13 @@ class Chat extends React.Component {
         });
 
         this.ws.on('input room', (message) => {
-            this.addMessage(message);
-            console.log(message);
+            this.addMessage(message);   
         });
 
-        this.ws.on('send online', (arr) => {
-            this.renderId(arr);
-            console.log(arr);
-        });
+        this.ws.on('join',(room) => {
+            this.ws.emit('accept_invite',room)
+        })
+
         this.ws.on('server message', (message) => {
             alert(message);
         });
@@ -80,7 +98,6 @@ class Chat extends React.Component {
 
     addMessage = (message) => {
         this.props.addMesageToStore(message);
-
     };
 
     addInfo = (info) => {
@@ -91,6 +108,10 @@ class Chat extends React.Component {
         this.props.addRoomToStore(obj);
     };
 
+    addUsers = (arr) => {
+        this.props.addUsersToStore(arr)
+    }
+
     submitMessage = (obj) => {
         obj.room = this.state.room;
         obj.name = this.props.info.info.firstName;
@@ -98,11 +119,10 @@ class Chat extends React.Component {
         this.addMessage(obj);
     };
     submitRoom = (value) => {
-        const room = value;
-        console.log(room);
+        const roomObj = value;
         this.setState({ room: value.room })
-        this.addRoom(room);
-        this.ws.emit('create', room);
+        this.addRoom(roomObj.room);
+        this.ws.emit('create', roomObj);
     };
     leaveRoom = () => {
         this.ws.emit('leave room', this.state.room);
@@ -110,51 +130,68 @@ class Chat extends React.Component {
     }
 
     render() {
-        
+
+        console.log(this.props.rooms);
+
         return (<div>
             {localStorage.getItem('email_chat') ?
-            <div className='chat'>
-                <div className='sider'>
-                    <PrivateRoom
-                        onSubmitRoom={(value) => {
-                            this.submitRoom(value)
-                        }}
-                    />
-                    <LeaveBtn
-                        onLeaveRoom={() => {
-                            this.leaveRoom();
-                        }}
-                    />
-                    {this.props.ids.ids.map((id, index) =>
-                        <ClientList
-                            key={index}
-                            port={id}
+                <div className='chat'>
+                    <div className='sider'>
+                        <div className='form-container'>
+                        <PrivateRoom
+                            onSubmitRoom={(value) => {
+                                this.submitRoom(value)
+                            }}
                         />
-                    )}
+                        <LeaveBtn
+                            onLeaveRoom={() => {
+                                this.leaveRoom();
+                            }}
+                        />
+                        </div>
+                        <div className='users-container'>
+                        {this.props.users.users.map((user, index) =>
+                            <ClientList
+                                key={index}
+                                email={user.email}
+                                pic={user.img}
+                                firstname={user.firstName}
+                                secondName={user.secondName}
+                                room={this.state.room}
+                            />
+                        )}
+                        </div>
+                    </div>
+                    <div className='sider'>
+                        <Profile info={this.props.info.info} />
+                        {
+                            this.props.rooms.rooms.map((room,index) => 
+                                <RoomList
+                                    key={index}
+                                    room={room}
+                                />              
+                            )}
+                    </div>
+                    <div className='message-container' >
+                        {this.props.message.messages.map((message, index) =>
+                            <Messager
+                                key={index}
+                                message={message.message}
+                                name={message.name}
+                            />,
+                        )}
+                    </div>
+                    <ChatInput
+                        onSubmitMessage={(value) => {
+                            this.submitMessage(value)
+                        }}
+                    />
                 </div>
-                <div className='sider'>
-                    <Profile info={this.props.info.info} />
-                </div>
-                <div className='message-container' >
-                    {this.props.message.messages.map((message, index) =>
-                        <Messager
-                            key={index}
-                            message={message.message}
-                            name={message.name}
-                        />,
-                    )}
-                </div>
-                <ChatInput
-                    onSubmitMessage={(value) => {
-                        this.submitMessage(value)
-                    }}
-                />
-            </div>
-            :
-            <Redirect to='/'/>
+                :
+                <Redirect to='/' />
             }
         </div>
-            
+
         )
     }
 };
@@ -165,7 +202,8 @@ function mapDispatchToProps(dispatch) {
         addMesageToStore: (message) => dispatch(write(message)),
         pushIdToStore: (arr) => dispatch(idOnline(arr)),
         addRoomToStore: (obj) => dispatch(room(obj)),
-        addInfoToStore: (info) => dispatch(inf(info))
+        addInfoToStore: (obj) => dispatch(inf(obj)),
+        addUsersToStore: (arr) => dispatch(users(arr))
     }
 }
 function mapStateToProps(state) {
@@ -173,7 +211,8 @@ function mapStateToProps(state) {
         message: state.message,
         ids: state.id,
         rooms: state.room,
-        info: state.info
+        info: state.info,
+        users: state.users
     }
 }
 

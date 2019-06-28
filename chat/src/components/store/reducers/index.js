@@ -3,12 +3,14 @@ import {messageReducer} from './messageReducer';
 import {idReducer} from './idReducer';
 import {roomReducer} from './roomReducer';
 import {infoReducer} from './infoReducer';
+import {usersReducer} from './usersReducer';
 
 const reducer = combineReducers({
     message: messageReducer,
     id: idReducer,
     room: roomReducer,
-    info: infoReducer
+    info: infoReducer,
+    users: usersReducer
 });
 
 

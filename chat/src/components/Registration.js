@@ -2,10 +2,8 @@ import React from 'react';
 import './registration.css';
 import googleLogo from './google.png';
 import axios from 'axios';
-import { createBrowserHistory } from 'history';
 import { Redirect } from "react-router-dom";
 
-const history = createBrowserHistory();
 
 export default class Registration extends React.Component {
 
@@ -32,20 +30,26 @@ export default class Registration extends React.Component {
         .then(_onInit, _onError)
     })
   }
-  signIn = () => {
+  signIn = (e) => {
     const auth2 = window.gapi.auth2.getAuthInstance()
     auth2.signIn().then(googleUser => {
       // токен
       const id_token = googleUser.getAuthResponse().id_token;
       const tok = { id_token: 'lol' };
-      axios.post('http://localhost:8124/auth', {tokken: id_token})
+      return axios.post('http://localhost:8124/auth', {tokken: id_token})
         .then(
           (res) => {
             window.localStorage.setItem("email_chat",res.data)
           }
         );
     
+    }).then(() => {
+      console.log('history push')
+      this.props.history.push('/#/homepage')
     })
+    ;
+
+    
   };
   signOut = () => {
     const auth2 = window.gapi.auth2.getAuthInstance()
@@ -54,14 +58,24 @@ export default class Registration extends React.Component {
     })
   };
   register(e) {
+    e.preventDefault()
     window.localStorage.setItem("userName",e.target.elements.name.value);
     window.localStorage.setItem("email_chat",e.target.elements.email.value);
     const user = {
       email: e.target.elements.email.value,
-      userName: e.target.elements.name.value
-    }
-    axios.post('http://localhost:8124/register', user);
-    history.push('/#/homepage');
+      userName: 'User'
+    };
+
+    if(e.target.elements.name.value !== '') {
+      user.userName = e.target.elements.name.value
+    };
+
+
+
+    axios.post('http://localhost:8124/register', {info: user})
+    .then(
+    )
+    this.props.history.push('/#/homepage');
   }
   render() {
     return (
