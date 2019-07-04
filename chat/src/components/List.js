@@ -21,6 +21,6 @@ export default ({email,pic,firstname,secondName,room} ) =>
            <div className = 'username' >{firstname} {secondName}</div>
            <button className='add btn-info' onClick={()=>{
               handler(email,room)
-           }}>ADD</button>
+           }}> ADD </button>
         </div>
      </div>

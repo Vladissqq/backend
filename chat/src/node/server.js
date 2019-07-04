@@ -46,7 +46,7 @@ Room.find({ name: /all/i }).exec(
 const arrId = [];
 const arrClients = [];
 const arrEmails = [];
-const rooms = [];
+const rooms = ['all'];
 let decoded = null;
 let info = null;
 
@@ -81,40 +81,40 @@ app.post('/auth', function (req, res) {
   res.status(200).send(decoded.email);
 });
 
-app.post('/rooms', function (req,res) {
+app.post('/rooms', function (req, res) {
   console.log(req.body.email);
-  User.findOne({email: req.body.email}).exec(
-    (err,user) => {
-      if(user) {
+  User.findOne({ email: req.body.email }).exec(
+    (err, user) => {
+      if (user) {
         res.status(200).send(user.rooms);
       }
     }
   )
 })
 
-app.get('/users', function (req,res) {
+app.get('/users', function (req, res) {
   User.find().exec(
-    (err,users) =>{
+    (err, users) => {
       res.status(200).send(users)
     }
   )
 });
 
 
-app.post('/invite',function(req,res) {
+app.post('/invite', function (req, res) {
 
-  User.findOne({email: req.body.guest.email}).exec(
-    (err,user) => {
+  User.findOne({ email: req.body.guest.email }).exec(
+    (err, user) => {
       const room = user.rooms.find((el) => {
         return el === req.body.guest.room
       });
 
-      if(!room){
+      if (!room) {
         user.rooms.push(req.body.guest.room);
-        user.save(); 
+        user.save();
         const indGuest = arrEmails.indexOf(req.body.guest.email);
-        if(indGuest >= 0){
-          arrClients[indGuest].emit('join',req.body.guest.room)
+        if (indGuest >= 0) {
+          arrClients[indGuest].emit('join', req.body.guest.room)
         }
       }
     }
@@ -181,19 +181,19 @@ io.on('connection', (client) => {
     client.emit('send online', arrId);
   });
 
-  client.on('accept_invite', (room) =>{
+  client.on('accept_invite', (room) => {
     rooms.push(room)
   })
 
-  client.on('send_email',(email) => {
+  client.on('send_email', (email) => {
     arrEmails.push(email);
-    User.findOne({email: email}).exec(
-      (err,user) => {
- 
+    User.findOne({ email: email }).exec(
+      (err, user) => {
+
       }
     )
   });
-  client.on('remove_email',() => {
+  client.on('remove_email', () => {
     console.log('is work')
   })
 
@@ -216,23 +216,24 @@ io.on('connection', (client) => {
   });
   client.on('create', (roomObj) => {
     //addd room to BD
-    Room.find({name: roomObj.room}).exec(
-      (err,r) =>{
-        if(r.length === 0 ) {
+    Room.find({ name: roomObj.room }).exec(
+      (err, r) => {
+        if (r.length === 0) {
           const customRoom = new Room({
             _id: new mongoose.Types.ObjectId(),
             name: roomObj.room,
             messages: []
           });
           rooms.push(roomObj.room);
+          console.log(rooms)
           customRoom.save();
         }
       }
     );
 
-    User.findOne({email: roomObj.email}).exec(
-      (err,user) => {
-        if(user.rooms.indexOf(roomObj.room) < 0){
+    User.findOne({ email: roomObj.email }).exec(
+      (err, user) => {
+        if (user.rooms.indexOf(roomObj.room) < 0) {
           user.rooms.push(roomObj.room)
         }
       }
@@ -241,6 +242,10 @@ io.on('connection', (client) => {
     //socket 
     client.join(roomObj.room);
   });
+
+  client.on('join_room',(room) => {
+    client.join(room);
+  })
 
   client.on('leave room', (room) => {
     client.leave(room);

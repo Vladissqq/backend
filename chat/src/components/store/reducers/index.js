@@ -1,9 +1,11 @@
-import {createStore, combineReducers} from 'redux';
+import {createStore, combineReducers, applyMiddleware} from 'redux';
 import {messageReducer} from './messageReducer';
 import {idReducer} from './idReducer';
 import {roomReducer} from './roomReducer';
 import {infoReducer} from './infoReducer';
 import {usersReducer} from './usersReducer';
+import thunk from 'redux-thunk';
+import logger from 'redux-logger';
 
 const reducer = combineReducers({
     message: messageReducer,
@@ -13,10 +15,9 @@ const reducer = combineReducers({
     users: usersReducer
 });
 
-
 const store = createStore(
     reducer, 
-    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+    applyMiddleware(thunk,logger)
 );
 
 export {
